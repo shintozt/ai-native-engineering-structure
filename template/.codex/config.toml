@@ -1,0 +1,36 @@
+# Codex 项目级控制配置。
+# 作用：把 AGENTS.md 和 harness/sop/ 中的流程要求接入 Codex Hooks。
+# 注意：Hooks 是工程护栏，不是唯一安全边界；CI / PR 门禁仍然必须保留。
+
+[features]
+codex_hooks = true
+
+[agents]
+max_threads = 5
+max_depth = 1
+
+[[hooks.SessionStart]]
+matcher = "startup|resume"
+
+[[hooks.SessionStart.hooks]]
+type = "command"
+command = 'python3 -B harness/scripts/hooks/harness_gate.py prompt'
+timeout = 30
+statusMessage = "检查 Harness 初始化状态"
+
+[[hooks.PreToolUse]]
+matcher = ".*"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = 'python3 -B harness/scripts/hooks/harness_gate.py pre-edit'
+timeout = 30
+statusMessage = "执行 Harness 编辑前门禁"
+
+[[hooks.Stop]]
+
+[[hooks.Stop.hooks]]
+type = "command"
+command = 'python3 -B harness/scripts/hooks/harness_gate.py stop'
+timeout = 30
+statusMessage = "执行 Harness 结束门禁"

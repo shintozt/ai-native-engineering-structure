@@ -1,0 +1,35 @@
+# Build artifacts
+build/
+out/
+*.o
+*.obj
+*.so
+*.a
+*.dylib
+*.exe
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local Track 锁（本地状态，不在团队间共享）
+harness/state/active-track.md
+
+# 本地环境
+.env
+.env.local

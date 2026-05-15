@@ -1,0 +1,57 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": [
+              "-B",
+              "${CLAUDE_PROJECT_DIR}/harness/scripts/hooks/harness_gate.py",
+              "prompt"
+            ],
+            "timeout": 30,
+            "statusMessage": "检查 Harness 初始化状态"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": [
+              "-B",
+              "${CLAUDE_PROJECT_DIR}/harness/scripts/hooks/harness_gate.py",
+              "pre-edit"
+            ],
+            "timeout": 30,
+            "statusMessage": "执行 Harness 编辑前门禁"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": [
+              "-B",
+              "${CLAUDE_PROJECT_DIR}/harness/scripts/hooks/harness_gate.py",
+              "stop"
+            ],
+            "timeout": 30,
+            "statusMessage": "执行 Harness 结束门禁"
+          }
+        ]
+      }
+    ]
+  }
+}
