@@ -1,0 +1,30 @@
+{
+  "enabled": false,
+  "enabled_by": "",
+  "enabled_at": "",
+  "trigger_paths": [
+    "src/domain/**",
+    "tests/domain/**",
+    "harness/verification/domain-special/**",
+    "api/**",
+    "proto/**"
+  ],
+  "correctness": {
+    "command": [
+      "bash",
+      "harness/scripts/verify/verify-domain-correctness-template.sh"
+    ],
+    "summary_json": "build/domain-special/correctness.json",
+    "log": "harness/verification-runs/domain-correctness.md"
+  },
+  "performance": {
+    "command": [
+      "bash",
+      "harness/scripts/verify/verify-domain-performance-template.sh"
+    ],
+    "summary_json": "build/domain-special/performance.json",
+    "log": "harness/verification-runs/domain-performance.md",
+    "fixed_thresholds": [],
+    "ratio_thresholds": []
+  }
+}

@@ -22,13 +22,16 @@
 | 脚本 | 触发来源 | 何时运行 | 复制后必须确认 |
 | --- | --- | --- | --- |
 | `hooks/harness_gate.py` | `.claude/settings.json`、`.codex/config.toml` | `prompt` / `pre-edit` / `stop` | 代码目录、Track 识别、代码类文件识别 |
+| `hooks/harness_gate_test.py` | 研发人员 / CI | 修改 hook 门禁后 | 可直接运行；用于防止阶段门禁回退 |
 
 ### lifecycle/
 
 | 脚本 | 触发来源 | 何时运行 | 复制后必须确认 |
 | --- | --- | --- | --- |
 | `lifecycle/check-init-readiness.py` | `AGENTS.md`、初始化 SOP、人工复核 | 新服务初始化完成前 | 可直接使用；必要时补项目特有检查 |
-| `lifecycle/track.py` | `AGENTS.md`、Track 生命周期文档 | open / finish-task / close / status | 分支命名、验证命令、commit / push 策略 |
+| `lifecycle/check-spec-coverage.py` | `track.py next-stage` 前人工可运行、Evaluator、CI 可选 | Spec / Design / Tasks 定稿前 | INV / RULE 命名规则；一般可直接使用 |
+| `lifecycle/track.py` | `AGENTS.md`、Track 生命周期文档 | open / next-stage / revise-stage / finish-task / close / pre-merge-check / status | 分支命名、验证命令、commit / push 人工确认策略 |
+| `lifecycle/track_lifecycle_test.py` | 研发人员 / CI | 修改 track 生命周期脚本后 | 可直接运行；用于防止逐阶段流程回退 |
 
 ### verify/
 
@@ -37,6 +40,8 @@
 | `verify/verify-template.sh` | `track.py finish-task`、AI 完成定义、CI | 声称完成前、CI、人工验收前 | 构建命令、测试命令、测试数断言、分层检查 |
 | `verify/check-layer-boundaries-template.sh` | `verify-template.sh`、CI 可单独调用 | verify 中调用，也可单独运行 | 语言 import/include 规则、目录边界 |
 | `verify/check-cpp-style-template.sh` | `verify-template.sh`、CI 可单独调用 | C++ 代码完成前、CI | C++ 文件后缀、目录范围、clang-format 版本 |
+| `verify/verify-domain-correctness-template.sh` | 人工或专项 CI；默认不进入通用门禁 | 启用 domain 专项验证后 | 正确性 fixture、执行命令、summary JSON |
+| `verify/verify-domain-performance-template.sh` | 人工或专项 CI；默认不进入通用门禁 | 启用 domain 专项验证后 | benchmark 场景、指标、summary JSON |
 
 ### tools/
 
@@ -50,6 +55,9 @@
 python3 -B harness/scripts/hooks/harness_gate.py prompt
 python3 -B harness/scripts/lifecycle/check-init-readiness.py
 python3 -B harness/scripts/hooks/harness_gate.py pre-edit
+python3 -B harness/scripts/lifecycle/track.py open <name>
+python3 -B harness/scripts/lifecycle/track.py next-stage
+python3 -B harness/scripts/lifecycle/check-spec-coverage.py
 bash harness/scripts/verify/verify-template.sh
 python3 -B harness/scripts/hooks/harness_gate.py stop
 ```
@@ -71,7 +79,9 @@ bash harness/scripts/verify/check-layer-boundaries-template.sh
 - [ ] 测试数为 0 或 skipped-only 时会失败。
 - [ ] `check-layer-boundaries-template.sh` 能检查真实分层规则。
 - [ ] C++ 项目可以运行 `check-cpp-style-template.sh`。
-- [ ] `harness_gate.py pre-edit` 在无当前 Track spec 时会阻断代码类编辑。
+- [ ] `check-spec-coverage.py` 能识别真实 Track 的 INV / RULE 覆盖情况。
+- [ ] `harness_gate.py pre-edit` 在 proposal/spec/design/tasks 未定稿时会阻断代码类编辑。
+- [ ] 修改 `track.py` 或 `harness_gate.py` 后，必须运行对应 `*_test.py`。
 
 ## 输出格式
 

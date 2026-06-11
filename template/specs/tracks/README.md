@@ -5,13 +5,15 @@
 ```text
 specs/tracks/<YYYY-MM-DD-需求名>/
   proposal.md
+  notes.md
   spec.md
   design.md
   tasks.md
-  notes.md
   acceptance.md
   learnings.md
 ```
+
+`open` 默认只创建 `proposal.md` 和 `notes.md`。`spec.md`、`design.md`、`tasks.md` 必须在上一档人工定稿后，通过 `track.py next-stage` 顺序生成。`acceptance.md` / `learnings.md` 在全部 task Done 后生成。
 
 ## Track 状态机
 
@@ -52,12 +54,20 @@ python3 -B harness/scripts/lifecycle/track.py finish-task [--task T1] [--message
 ```
 
 该命令会自动：
-1. 跑 `verify-template.sh` 和 `check-layer-boundaries-template.sh`
-2. 通过后更新 `tasks.md` 中该 task 的状态为 `Done`
-3. 再 `git add -A && git commit -m "feat(<slug>): <T-id> <task-name>" && git push`
-4. 推进 active-track.md 的当前任务指针
+1. 检查 `tasks.md` 已定稿。
+2. 检查 implementation module map 影响是否已处理。
+3. 跑 `verify-template.sh` 和 `check-layer-boundaries-template.sh`。
+4. 通过后更新 `tasks.md` 中该 task 的状态为 `Done`。
+5. 推进 active-track.md 的当前任务指针。
+6. 如果是最后一个 task，自动铺出 `acceptance.md` / `learnings.md`。
 
-**验证失败时阻断 commit，工作区保留供修复**。
+**验证失败时阻断状态推进，工作区保留供修复**。
+
+默认不执行 git commit / push。只有人工确认后，才允许运行：
+
+```bash
+python3 -B harness/scripts/lifecycle/track.py finish-task --task T1 --commit --confirmed-by <人名>
+```
 
 ## 归档要求
 

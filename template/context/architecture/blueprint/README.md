@@ -7,3 +7,5 @@
 1. `directory-blueprint.md`
 2. `layering-rules.md`
 3. `dependency-rules.md`
+4. `class-design-rules.md`
+5. `domain-capability-design-rules.md`

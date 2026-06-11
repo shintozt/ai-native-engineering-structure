@@ -11,7 +11,8 @@
 
 自动检查方式：
 
-- `harness/scripts/hooks/harness_gate.py pre-edit` 检查代码类编辑前是否存在当前 Track 的 `spec.md`。
+- `harness/scripts/hooks/harness_gate.py pre-edit` 检查 `spec.md` 编辑前是否已定稿 `proposal.md`。
+- `python3 -B harness/scripts/lifecycle/track.py next-stage` 检查 `proposal.md` 是否含非空 `approved-by`。
 
 人工检查方式：
 
@@ -30,6 +31,8 @@
 
 自动检查方式：
 
+- `harness/scripts/hooks/harness_gate.py pre-edit` 检查 `design.md` 编辑前是否已定稿 `spec.md`。
+- `python3 -B harness/scripts/lifecycle/check-spec-coverage.py` 检查 INV / RULE 是否在 design/tasks 中有锚点。
 - 可通过 Evaluator Agent 检查 Design 是否覆盖 Spec。
 
 人工检查方式：
@@ -44,6 +47,12 @@
 - 每项任务有验证方式。
 - 修改文件明确。
 - 不确定问题已列出。
+- 每项任务标明对应 Spec、命中 INV、implementation module map 影响和测试用例。
+
+自动检查方式：
+
+- `harness/scripts/hooks/harness_gate.py pre-edit` 检查 `tasks.md` 编辑前是否已定稿 `design.md`。
+- `track.py finish-task` 检查 `tasks.md` 是否含非空 `approved-by`。
 
 ## 门禁 4：验证
 
@@ -59,6 +68,7 @@
 
 - `bash harness/scripts/verify/verify-template.sh`
 - `bash harness/scripts/verify/check-layer-boundaries-template.sh`
+- `track.py finish-task` 在更新任务状态前自动调用验证命令。
 
 ## 门禁 5：AI 自审
 
@@ -86,4 +96,8 @@
 - `learnings.md` 已记录。
 - `context/` 已更新。
 - 必要 ADR 已补充。
-- `notes.md` 中的知识已处理。
+- 已按归档清单全量核对，包括 notes.md 知识处理、知识引用回写、ADR 补充和 implementation module map 影响判断。
+
+自动检查方式：
+
+- `track.py close` 检查 `acceptance.md` 定稿戳、`learnings.md` 非空、task 全部 Done、最终验证通过。

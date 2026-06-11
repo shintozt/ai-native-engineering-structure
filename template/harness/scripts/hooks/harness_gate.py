@@ -5,12 +5,8 @@
 
 用途：
 - prompt：提醒 AI 先读工程入口、上下文和当前 Track。
-- pre-edit：代码类编辑前检查当前 Track 是否已有非空 spec.md。
+- pre-edit：编辑前检查初始化状态、active track、阶段定稿戳和代码编辑资格。
 - stop：结束前提醒验证和归档。
-
-调用方：
-- Codex / Claude Code Hook。
-- 人工命令。
 
 项目化要求：
 - 按真实项目调整 SRC_LIKE_PREFIXES 和 SRC_LIKE_FILES。
@@ -21,13 +17,25 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any
 
 
-ROOT = Path.cwd()
+def find_project_root(start: Path | None = None) -> Path:
+    current = (start or Path.cwd()).resolve()
+    while True:
+        if (current / "AGENTS.md").is_file():
+            return current
+        if current == current.parent:
+            return Path.cwd().resolve()
+        current = current.parent
+
+
+ROOT = find_project_root()
 TRACKS = ROOT / "specs" / "tracks"
 INIT_STATUS = ROOT / "harness" / "state" / "init-status.md"
 ACTIVE_TRACK = ROOT / "harness" / "state" / "active-track.md"
@@ -42,6 +50,50 @@ INIT_ALLOWED_PREFIXES = (
     "context/",
     "harness/",
 )
+
+STAGE_FILES = {
+    "proposal.md": "proposal",
+    "spec.md": "spec",
+    "design.md": "design",
+    "tasks.md": "tasks",
+    "acceptance.md": "archive",
+    "learnings.md": "archive",
+}
+PREVIOUS_STAGE_APPROVAL = {
+    "spec.md": "proposal.md",
+    "design.md": "spec.md",
+    "tasks.md": "design.md",
+    "acceptance.md": "tasks.md",
+    "learnings.md": "tasks.md",
+}
+CODE_REQUIRED_APPROVALS = ("proposal.md", "spec.md", "design.md", "tasks.md")
+APPROVED_BY_RE = re.compile(r"^\s*-\s*approved-by\s*[:：]\s*(.*?)\s*$", re.IGNORECASE)
+
+READ_ONLY_COMMANDS = {
+    "cat",
+    "sed",
+    "awk",
+    "grep",
+    "rg",
+    "find",
+    "ls",
+    "pwd",
+    "wc",
+    "head",
+    "tail",
+    "nl",
+    "git",
+}
+READ_ONLY_GIT_SUBCOMMANDS = {
+    "status",
+    "diff",
+    "show",
+    "log",
+    "branch",
+    "rev-parse",
+    "ls-files",
+    "grep",
+}
 
 
 def _read_active_track() -> dict[str, str] | None:
@@ -109,11 +161,27 @@ def _current_track() -> Path | None:
     return None
 
 
-def _has_current_track_spec() -> bool:
+def _is_file_approved(path: Path) -> bool:
+    if not path.exists():
+        return False
+    try:
+        text = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return False
+    for line in text.splitlines():
+        m = APPROVED_BY_RE.match(line)
+        if not m:
+            continue
+        value = m.group(1).strip()
+        return bool(value and value not in ("待确认", "TBD", "TODO"))
+    return False
+
+
+def _current_track_has_approved_docs(files: tuple[str, ...] = CODE_REQUIRED_APPROVALS) -> bool:
     track = _current_track()
     if track is None:
         return False
-    return _is_nonempty(track / "spec.md")
+    return all(_is_file_approved(track / file_name) for file_name in files)
 
 
 def _init_completed() -> bool:
@@ -130,21 +198,67 @@ def _init_completed() -> bool:
     return bool(status_lines) and status_lines[0] == "已完成"
 
 
+def _json_text(payload: dict[str, Any]) -> str:
+    return json.dumps(payload, ensure_ascii=False)
+
+
 def _looks_like_code_edit(payload: dict[str, Any]) -> bool:
-    text = json.dumps(payload, ensure_ascii=False)
+    text = _json_text(payload)
     return any(prefix in text for prefix in SRC_LIKE_PREFIXES) or any(
         name in text for name in SRC_LIKE_FILES
     )
 
 
 def _looks_like_track_edit(payload: dict[str, Any]) -> bool:
-    text = json.dumps(payload, ensure_ascii=False)
-    return TRACK_PREFIX in text
+    return TRACK_PREFIX in _json_text(payload)
 
 
 def _looks_like_init_allowed_edit(payload: dict[str, Any]) -> bool:
-    text = json.dumps(payload, ensure_ascii=False)
+    text = _json_text(payload)
     return any(prefix in text for prefix in INIT_ALLOWED_PREFIXES)
+
+
+def _payload_strings(value: Any) -> list[str]:
+    out: list[str] = []
+    if isinstance(value, str):
+        out.append(value)
+    elif isinstance(value, dict):
+        for item in value.values():
+            out.extend(_payload_strings(item))
+    elif isinstance(value, list):
+        for item in value:
+            out.extend(_payload_strings(item))
+    return out
+
+
+def _payload_track_files(payload: dict[str, Any]) -> list[tuple[str, str]]:
+    files: list[tuple[str, str]] = []
+    for text in _payload_strings(payload):
+        for match in re.finditer(r"specs/tracks/([A-Za-z0-9._-]+)/([A-Za-z0-9._-]+\.md)", text):
+            files.append((match.group(1), match.group(2)))
+    return files
+
+
+def _looks_like_read_only_shell(payload: dict[str, Any]) -> bool:
+    cmd = ""
+    if isinstance(payload.get("cmd"), str):
+        cmd = payload["cmd"]
+    elif isinstance(payload.get("parameters"), dict) and isinstance(payload["parameters"].get("cmd"), str):
+        cmd = payload["parameters"]["cmd"]
+    if not cmd.strip():
+        return False
+    try:
+        parts = shlex.split(cmd)
+    except ValueError:
+        return False
+    if not parts:
+        return False
+    binary = Path(parts[0]).name
+    if binary not in READ_ONLY_COMMANDS:
+        return False
+    if binary == "git":
+        return len(parts) >= 2 and parts[1] in READ_ONLY_GIT_SUBCOMMANDS
+    return True
 
 
 def _git_changed_files() -> list[str]:
@@ -182,12 +296,57 @@ def _print_context_reminder() -> int:
     else:
         print(
             "Harness 提醒：规划或编辑前，请先阅读 AGENTS.md、constitution.md、"
-            "context/INDEX.md，以及当前 specs/tracks/<需求名>/ 下的需求文件。"
+            "harness/lifecycle/gates.md、harness/lifecycle/track-lifecycle.md、"
+            "context/INDEX.md，以及当前 Track 的已定稿文档。"
         )
     return 0
 
 
+def _check_track_stage_edit(payload: dict[str, Any]) -> int:
+    active = _active_track_path()
+    if active is None:
+        print(
+            "Harness Track 门禁已阻断：当前无 active track，不允许编辑 specs/tracks/ 下任何文件。"
+            "请先运行 `python3 -B harness/scripts/lifecycle/track.py open <name>` 启动 track。",
+            file=sys.stderr,
+        )
+        return 2
+
+    active_slug = Path(active).name
+    track = ROOT / active
+    for slug, file_name in _payload_track_files(payload):
+        if slug != active_slug:
+            print(
+                f"Harness Track 门禁已阻断：当前 active track 是 {active}/，"
+                f"不允许编辑 specs/tracks/{slug}/。",
+                file=sys.stderr,
+            )
+            return 2
+        if file_name not in STAGE_FILES:
+            continue
+        target = track / file_name
+        if _is_file_approved(target):
+            print(
+                f"Harness 阶段门禁已阻断：{file_name} 已定稿，不能直接修改。"
+                "请先运行 `python3 -B harness/scripts/lifecycle/track.py revise-stage "
+                f"{STAGE_FILES[file_name]} --confirmed-by <人名>`。",
+                file=sys.stderr,
+            )
+            return 2
+        previous = PREVIOUS_STAGE_APPROVAL.get(file_name)
+        if previous and not _is_file_approved(track / previous):
+            print(
+                f"Harness 阶段门禁已阻断：编辑 {file_name} 前必须先定稿 {previous}。",
+                file=sys.stderr,
+            )
+            return 2
+    return 0
+
+
 def _pre_edit(payload: dict[str, Any]) -> int:
+    if _looks_like_read_only_shell(payload):
+        return 0
+
     if not _init_completed():
         if _looks_like_code_edit(payload) or _looks_like_track_edit(payload):
             print(
@@ -203,29 +362,15 @@ def _pre_edit(payload: dict[str, Any]) -> int:
                 file=sys.stderr,
             )
 
-    # 初始化已完成后的 track 锁检查
     if _looks_like_track_edit(payload):
-        text = json.dumps(payload, ensure_ascii=False)
-        active = _active_track_path()
-        if active is None:
-            print(
-                "Harness Track 门禁已阻断：当前无 active track，不允许编辑 specs/tracks/ 下任何文件。"
-                "请先运行 `python3 -B harness/scripts/lifecycle/track.py open <name>` 启动 track。",
-                file=sys.stderr,
-            )
-            return 2
-        if active and active not in text and (active + "/") not in text:
-            print(
-                f"Harness Track 门禁已阻断：当前 active track 是 {active}/，"
-                "不允许编辑其他 track 的文件。要切换请先 close 当前 track。",
-                file=sys.stderr,
-            )
-            return 2
+        blocked = _check_track_stage_edit(payload)
+        if blocked:
+            return blocked
 
-    if _looks_like_code_edit(payload) and not _has_current_track_spec():
+    if _looks_like_code_edit(payload) and not _current_track_has_approved_docs():
         print(
-            "Harness 门禁已阻断：代码类编辑需要先存在当前 Track 的 spec.md，"
-            "且内容非空。请先创建并确认 Spec。",
+            "Harness 门禁已阻断：代码类编辑需要当前 Track 的 proposal/spec/design/tasks "
+            "均已填写 approved-by。请按 track.py next-stage 逐档定稿后再编码。",
             file=sys.stderr,
         )
         return 2

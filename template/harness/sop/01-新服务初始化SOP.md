@@ -94,7 +94,7 @@ tests/
 git init -b main
 ```
 
-如果团队要求远端分支，请在第一个 Track 进入编码前配置 remote。`track.py finish-task` 会自动提交，并尝试 `git push -u origin HEAD`；没有 remote 时会保留本地 commit 并提示人工处理。
+如果团队要求远端分支，请在第一个 Track 进入编码前配置 remote。`track.py finish-task` 默认只验证并更新 task 状态；只有人工明确确认后，才能使用 `finish-task --commit --confirmed-by <人名>` 提交并尝试 `git push -u origin HEAD`。
 
 完成证据：
 

@@ -18,8 +18,8 @@
 - `AGENTS.md` 必读顺序直接引用，AI 每次进入工程和处理需求前都必须读取。
 - `specs/tracks/README.md` 引用，用于说明 Track 目录创建、状态机、互斥规则和任务推进方式。
 - `harness/README.md` 引用，用于在人类阅读控制流程图时定位 Track 生命周期规则。
-- `harness/scripts/lifecycle/track.py` 是它的机械化执行入口，负责 `open`、`finish-task`、`close`、`status`。
-- `harness/scripts/hooks/harness_gate.py` 使用 `harness/state/active-track.md` 执行编辑前门禁，阻断无 active track、跨 track 编辑和无 Spec 的代码编辑。
+- `harness/scripts/lifecycle/track.py` 是它的机械化执行入口，负责 `open`、`next-stage`、`revise-stage`、`finish-task`、`close`、`pre-merge-check`、`status`。
+- `harness/scripts/hooks/harness_gate.py` 使用 `harness/state/active-track.md` 执行编辑前门禁，阻断无 active track、跨 track 编辑、未定稿阶段编辑和 proposal/spec/design/tasks 未定稿时的代码编辑。
 - `harness/scripts/lifecycle/check-init-readiness.py` 会检查 `AGENTS.md` 是否包含本文件，防止初始化时遗漏必读规则。
 
 `gates.md` 是门禁总览，也不是脚本配置文件。它通过以下路径生效：

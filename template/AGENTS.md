@@ -12,9 +12,9 @@
 6. `context/architecture/blueprint/directory-blueprint.md`
 7. `context/architecture/blueprint/layering-rules.md`
 8. `context/architecture/blueprint/dependency-rules.md`
-9. C++ 项目还必须读取 `context/operations/cpp-coding-style.md`
-10. 当前需求的 `specs/tracks/<需求名>/spec.md`
-11. 当前需求的 `specs/tracks/<需求名>/design.md`
+9. `context/architecture/blueprint/class-design-rules.md`
+10. C++ 项目还必须读取 `context/operations/cpp-coding-style.md`
+11. 当前 Track 已存在并已定稿的 `proposal.md` / `spec.md` / `design.md` / `tasks.md`
 
 ## 工作流硬规则
 
@@ -22,12 +22,17 @@
 - 新服务初始化未完成时，先执行 `harness/sop/01-新服务初始化SOP.md`，不得创建需求 Track 或修改业务代码。
 - `README.md` 是给人类阅读的项目说明，不作为 AI 工作规则来源；AI 只在初始化阶段原地修改 `README.md` 占位骨架，初始化完成后不再修改。
 - 启动新 Track 必须通过 `python3 -B harness/scripts/lifecycle/track.py open <name>`，不允许手动 `mkdir specs/tracks/`。
-- 完成 task 必须通过 `python3 -B harness/scripts/lifecycle/track.py finish-task` 触发验证 + commit + push，不允许手动 `git commit` 业务代码。
+- Track 文档必须按 `proposal -> spec -> design -> tasks -> coding -> acceptance/learnings` 逐档推进；每档人工定稿后才能运行 `track.py next-stage`。
+- 已定稿文档需要修改时，必须先运行 `python3 -B harness/scripts/lifecycle/track.py revise-stage <stage> --confirmed-by <人名>`。
+- 完成 task 必须通过 `python3 -B harness/scripts/lifecycle/track.py finish-task` 触发验证并更新任务状态。
+- git commit / push 只有在人工明确确认后，才能通过 `finish-task --commit --confirmed-by <人名>` 执行，不允许手动 `git commit` 业务代码。
+- 执行 git merge / push / 删除分支前，必须先运行 `python3 -B harness/scripts/lifecycle/track.py pre-merge-check`；若仍有 active Track，必须先 `track.py close` 或 `track.py close --abort`。
 - 同时只允许 1 个 active track。关闭当前 track（`track.py close` 或 `--abort`）后才能 open 下一个。
-- 没有确认过的 Spec，不允许编码。
+- 没有定稿过的 proposal/spec/design/tasks，不允许编码。
 - Blocking 问题未关闭，不允许编码。
 - 编码前必须输出计划，列出修改文件、影响层级、验证方式和风险点。
 - 任何实现都必须能追溯到 Spec。
+- 业务代码、public 头文件、协议、构建入口或目录结构变化时，必须更新 `context/architecture/implementation-module-map.md`，或在当前 task / acceptance 中写明 `implementation module map 影响：不影响` 及原因。
 - 需求外重构必须单独提出。
 - 完成前必须运行验证命令，并说明结果。
 - C++ 文件提交或声明完成前必须运行 clang-format。
@@ -52,6 +57,7 @@
 bash harness/scripts/verify/verify-template.sh
 bash harness/scripts/verify/check-layer-boundaries-template.sh
 python3 -B harness/scripts/lifecycle/check-init-readiness.py
+python3 -B harness/scripts/lifecycle/check-spec-coverage.py
 python3 -B harness/scripts/hooks/harness_gate.py prompt
 python3 -B harness/scripts/hooks/harness_gate.py pre-edit
 python3 -B harness/scripts/hooks/harness_gate.py stop
@@ -67,6 +73,7 @@ bash harness/scripts/verify/check-cpp-style-template.sh
 - 修改并发模型、锁粒度、异步生命周期。
 - 引入新依赖、新线程、新队列、新后台任务。
 - 删除或弱化测试、门禁、观测指标。
+- 执行 git commit / push / merge，删除本地或远端分支。
 
 ## 完成定义
 

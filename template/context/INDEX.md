@@ -9,16 +9,19 @@
 1. `business/business-map.md`
 2. `domain/ubiquitous-language.md`
 3. `domain/business-rules.md`
-4. `architecture/layered-architecture.md`
-5. `architecture/runtime-dataflow.md`
-6. `architecture/blueprint/directory-blueprint.md`
-7. `architecture/blueprint/layering-rules.md`
-8. `architecture/blueprint/dependency-rules.md`
-9. `engineering/README.md`
-10. `engineering/scaffolds/README.md`
-11. `operations/build-and-test.md`
-12. `operations/cpp-coding-style.md`
-13. `operations/observability.md`
+4. `domain/core-capability-design.md`
+5. `architecture/layered-architecture.md`
+6. `architecture/runtime-dataflow.md`
+7. `architecture/implementation-module-map.md`
+8. `architecture/blueprint/directory-blueprint.md`
+9. `architecture/blueprint/layering-rules.md`
+10. `architecture/blueprint/dependency-rules.md`
+11. `architecture/blueprint/class-design-rules.md`
+12. `engineering/README.md`
+13. `engineering/scaffolds/README.md`
+14. `operations/build-and-test.md`
+15. `operations/cpp-coding-style.md`
+16. `operations/observability.md`
 
 初始化结束前，以上文件必须替换占位内容，并同步更新相关 `catalog.md`。
 
@@ -29,12 +32,15 @@
 1. `business/business-map.md`
 2. `domain/ubiquitous-language.md`
 3. `domain/business-rules.md`
-4. `architecture/layered-architecture.md`
-5. `architecture/runtime-dataflow.md`
-6. `architecture/blueprint/layering-rules.md`
-7. `architecture/blueprint/dependency-rules.md`
-8. `operations/build-and-test.md`
-9. `operations/cpp-coding-style.md`
+4. `domain/core-capability-design.md`
+5. `architecture/layered-architecture.md`
+6. `architecture/runtime-dataflow.md`
+7. `architecture/implementation-module-map.md`
+8. `architecture/blueprint/layering-rules.md`
+9. `architecture/blueprint/dependency-rules.md`
+10. `architecture/blueprint/class-design-rules.md`
+11. `operations/build-and-test.md`
+12. `operations/cpp-coding-style.md`
 
 如果需求涉及已有知识、历史决策或代码脚手架，再按触发条件补读对应目录。
 
@@ -44,11 +50,14 @@
 | --- | --- | --- |
 | 修改业务范围、用户、上下游 | `business/business-map.md` | `business/business-map.md`、`business/catalog.md` |
 | 修改领域术语或核心规则 | `domain/ubiquitous-language.md`、`domain/business-rules.md` | `domain/`、`domain/catalog.md` |
-| 修改分层、依赖方向、目录结构 | `architecture/layered-architecture.md`、`architecture/blueprint/` | `architecture/`、`architecture/catalog.md` |
+| 修改 domain 能力域、数据主线、public 入口 | `domain/core-capability-design.md`、`architecture/blueprint/domain-capability-design-rules.md` | `domain/core-capability-design.md`、`domain/catalog.md` |
+| 修改分层、依赖方向、目录结构 | `architecture/layered-architecture.md`、`architecture/blueprint/`、`architecture/implementation-module-map.md` | `architecture/`、`architecture/catalog.md` |
+| 新增 public 类型或类拆分 | `architecture/blueprint/class-design-rules.md`、`architecture/implementation-module-map.md` | `architecture/implementation-module-map.md`、当前 Track `design.md` |
 | 引入外部依赖或 SDK | `architecture/blueprint/dependency-rules.md`、`decisions/catalog.md` | `decisions/ADR-xxx.md`、`architecture/catalog.md` |
 | 需要复制代码模式或模块骨架 | `engineering/scaffolds/README.md`、相关 scaffold | `engineering/scaffolds/`、`engineering/catalog.md` |
 | 修改构建、测试、格式化、CI | `operations/build-and-test.md`、`operations/cpp-coding-style.md` | `operations/`、`operations/catalog.md` |
-| 修改日志、指标、健康检查 | `operations/observability.md` | `operations/observability.md`、`operations/catalog.md` |
+| 修改日志、指标、健康检查 | `operations/observability.md`、`operations/log-analysis-guide.md` | `operations/observability.md`、`operations/log-analysis-guide.md`、`operations/catalog.md` |
+| 发现性能风险或做性能专项 | `operations/performance-risk-analysis.md` | `operations/performance-risk-analysis.md`、`operations/catalog.md` |
 | 出现重要方案取舍 | `decisions/catalog.md` | `decisions/ADR-xxx.md` |
 | 产生可复用经验或 AI 犯错记录 | `learnings/README.md`、`learnings/catalog.md` | `learnings/TK-xxx.md`、`learnings/catalog.md` |
 

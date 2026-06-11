@@ -46,9 +46,14 @@ REQUIRED_CONTEXT_FILES = (
     "context/business/business-map.md",
     "context/domain/ubiquitous-language.md",
     "context/domain/business-rules.md",
+    "context/domain/core-capability-design.md",
+    "context/domain/knowledge-packages/README.md",
     "context/domain/catalog.md",
     "context/architecture/layered-architecture.md",
     "context/architecture/runtime-dataflow.md",
+    "context/architecture/implementation-module-map.md",
+    "context/architecture/blueprint/class-design-rules.md",
+    "context/architecture/blueprint/domain-capability-design-rules.md",
     "context/architecture/catalog.md",
     "context/engineering/README.md",
     "context/engineering/catalog.md",
@@ -56,6 +61,8 @@ REQUIRED_CONTEXT_FILES = (
     "context/operations/build-and-test.md",
     "context/operations/cpp-coding-style.md",
     "context/operations/observability.md",
+    "context/operations/log-analysis-guide.md",
+    "context/operations/performance-risk-analysis.md",
     "context/operations/catalog.md",
 )
 PROJECTIZED_SCRIPTS = (

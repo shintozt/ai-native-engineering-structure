@@ -28,10 +28,19 @@ flowchart TD
   I -- "否" --> H
   I -- "是" --> J["track.py open <track-name>"]
 
-  J --> K["Proposal / Spec / Design / Tasks"]
-  K --> L{"Blocking 问题已关闭？"}
-  L -- "否" --> K
-  L -- "是" --> M["Generator 编码与测试"]
+  J --> K1["填写 proposal.md / notes.md"]
+  K1 --> K2{"proposal 人工定稿？"}
+  K2 -- "否" --> K1
+  K2 -- "是" --> K3["track.py next-stage -> spec.md"]
+  K3 --> K4{"spec 人工定稿？"}
+  K4 -- "否" --> K3
+  K4 -- "是" --> K5["track.py next-stage -> design.md"]
+  K5 --> K6{"design 人工定稿？"}
+  K6 -- "否" --> K5
+  K6 -- "是" --> K7["track.py next-stage -> tasks.md"]
+  K7 --> K8{"tasks 人工定稿？"}
+  K8 -- "否" --> K7
+  K8 -- "是" --> M["Generator 编码与测试"]
 
   M --> N["verify-template.sh / 分层检查 / C++ 风格检查"]
   N --> O{"验证通过？"}
@@ -69,9 +78,14 @@ flowchart TD
 - `state/active-track.md` — 当前 active track 本地指针（已 `.gitignore`，由 `track.py` 维护）。同时仅允许 1 个 active track。
 - `lifecycle/track-lifecycle.md` — Track 状态机、命令、active-track.md 格式、互斥规则。
 - `sop/01-新服务初始化SOP.md` — 新服务初始化操作手册（15 节，每节带完成证据三类型）。
+- `sop/02-domain-clarification-sop.md` — 可选 domain 澄清流程，用于先定核心能力设计。
+- `sop/03-domain-special-verification-sop.md` — 可选 domain 专项验证流程，用于高风险规则的长期正确性和性能验证。
 - `scripts/hooks/harness_gate.py` — 工具 Hook 调用的门禁脚本（SessionStart / PreToolUse / Stop 三阶段，含 active-track 锁）。
 - `scripts/lifecycle/check-init-readiness.py` — 初始化完成度自动检查（README/AGENTS/CLAUDE/constitution/context/scripts/Hooks/门禁行为）。
-- `scripts/lifecycle/track.py` — Track 生命周期命令（open / finish-task / close / status）。每完成一个 task 自动触发验证 + commit + push。
+- `scripts/lifecycle/check-spec-coverage.py` — Spec 不变式和业务规则覆盖检查。
+- `scripts/lifecycle/track.py` — Track 生命周期命令（open / next-stage / revise-stage / finish-task / close / pre-merge-check / status）。finish-task 默认只验证并更新状态；commit / push 必须人工显式确认。
+- `verification/` — 可选专项验证资产，默认不强制启用。
+- `verification-runs/` — 可选专项验证运行记录。
 - `scripts/verify/` — CI / PR / 完成前验证入口。
 - `scripts/tools/` — 手动修复和本地辅助工具。
 - `agents/*.md` — 5 个角色定义（planner / generator / evaluator / reviewer / maintainer），工具无关；Claude Code 和 Codex 都通过 `.claude/agents/` 和 `.codex/agents/` 下的 wrapper 触发。

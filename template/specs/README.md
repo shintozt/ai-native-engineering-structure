@@ -4,12 +4,14 @@
 
 ## 复杂度分级
 
-| 复杂度 | 适用场景 | 最小文件集 | 说明 |
+| 复杂度 | 适用场景 | 必需文件 | 内容深度 |
 | --- | --- | --- | --- |
-| 微小 | 文案、注释、非行为性文档、小范围测试命名修正 | `tasks.md`、`acceptance.md`、`notes.md` | 不改业务行为，不触碰热路径 |
-| 小 | 单点 bug、adapter/infra mock、小型观测指标、错误处理补齐 | `proposal.md`、`spec.md`、`tasks.md`、`acceptance.md`、`notes.md` | 可跳过完整 Design，但必须说明验证方式 |
-| 中 | 新增模块、小型 app 编排、外部依赖适配、业务规则局部变化 | `proposal.md`、`spec.md`、`design.md`、`tasks.md`、`acceptance.md`、`notes.md` | 默认流程 |
+| 微小 | 文案、注释、非行为性文档、小范围测试命名修正 | `proposal.md`、`notes.md`、`spec.md`、`design.md`、`tasks.md`、`acceptance.md`、`learnings.md` | 各文档可极简填写，但仍需定稿戳 |
+| 小 | 单点 bug、adapter/infra mock、小型观测指标、错误处理补齐 | 同上 | Design 可只写受影响接口、流程和验证，不展开大段架构 |
+| 中 | 新增模块、小型 app 编排、外部依赖适配、业务规则局部变化 | 同上 | 默认完整流程 |
 | 大 | 核心业务规则、协议变更、缓存一致性、并发模型、数据正确性边界 | 完整 Track + ADR + 评审记录 | 必须工程主导，AI 只执行明确任务 |
+
+为了让 hook 和生命周期脚本可机械化执行，所有会修改业务代码的 Track 都必须走 `proposal -> spec -> design -> tasks` 定稿链路。复杂度只影响每份文档写多深，不影响是否存在该文件。
 
 ## 模板
 
